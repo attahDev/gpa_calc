@@ -1,8 +1,6 @@
-# Environment — never commit secrets
+
 .env
 .env.local
-
-# Python
 __pycache__/
 *.pyc
 *.pyo
@@ -14,15 +12,13 @@ build/
 *.egg
 .pytest_cache/
 .mypy_cache/
-
-# Database
 *.db
 *.sqlite
 *.sqlite3
 
 # Docker
 .dockerenv
-
+docker-compose.yml
 # OS
 .DS_Store
 Thumbs.db

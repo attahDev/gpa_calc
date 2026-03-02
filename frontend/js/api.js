@@ -13,7 +13,7 @@
 
 const Api = (() => {
 
-  const BASE_URL = (window.APP_CONFIG?.apiBase || 'http://localhost:8000').replace(/\/$/, '');
+  const BASE_URL = (window.APP_CONFIG?.apiBase || 'https://gpa-calc-1.onrender.com').replace(/\/$/, '');
 
   // ── Access token in sessionStorage ────────────────────────────────────
   // sessionStorage survives page navigation but clears when the tab closes.

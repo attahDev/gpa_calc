@@ -12,4 +12,4 @@ COPY . .
 ENV PORT=8000
 EXPOSE $PORT
 
-CMD ["sh", "-c", "uvicorn backend.main:app --host 0.0.0.0 --port $PORT"]
+CMD ["sh", "-c", "alembic upgrade head &&uvicorn backend.main:app --host 0.0.0.0 --port $PORT"]
