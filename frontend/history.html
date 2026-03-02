@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>History — GPACalc</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <style>
+
+    /* ── Filter bar ── */
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-4);
+      margin-bottom: var(--space-5);
+      flex-wrap: wrap;
+    }
+
+    .filter-chips {
+      display: flex;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+    }
+
+    .filter-chip {
+      padding: var(--space-1) var(--space-4);
+      border-radius: var(--radius-full);
+      border: 1px solid var(--border-default);
+      background: var(--bg-elevated);
+      font-size: var(--text-sm);
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      font-family: var(--font-sans);
+    }
+
+    .filter-chip:hover { border-color: var(--border-strong); color: var(--text-primary); }
+
+    .filter-chip.active {
+      background: var(--accent-dim);
+      border-color: var(--accent-border);
+      color: var(--accent-text);
+    }
+
+    /* ── History table ── */
+    .history-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .history-table { width: 100%; }
+
+    .history-table th {
+      padding: var(--space-3) var(--space-5);
+      text-align: left;
+      font-size: var(--text-xs);
+      font-weight: 600;
+      letter-spacing: var(--tracking-wider);
+      text-transform: uppercase;
+      color: var(--text-muted);
+      background: var(--bg-overlay);
+      border-bottom: 1px solid var(--border-subtle);
+      white-space: nowrap;
+    }
+
+    .history-table th.sortable {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .history-table th.sortable:hover { color: var(--text-secondary); }
+
+    .sort-indicator { margin-left: 4px; opacity: 0.5; }
+    .sort-indicator.active { opacity: 1; color: var(--accent-text); }
+
+    .history-table td {
+      padding: var(--space-3) var(--space-5);
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border-subtle);
+      vertical-align: middle;
+    }
+
+    .history-table tr:last-child td { border-bottom: none; }
+
+    .history-table tbody tr {
+      transition: background var(--transition-fast);
+    }
+
+    .history-table tbody tr:hover td {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+    }
+
+    /* Type badges */
+    .type-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .type-convert  { background: rgba(99,102,241,.12);  color: #818cf8; }
+    .type-gpa      { background: var(--accent-dim);     color: var(--accent-text); }
+    .type-cgpa     { background: rgba(34,197,94,.1);    color: #22c55e; }
+    .type-target   { background: rgba(245,158,11,.12);  color: #f59e0b; }
+    .type-other    { background: var(--bg-overlay);     color: var(--text-muted); }
+
+    .result-value {
+      font-family: var(--font-mono);
+      font-size: var(--text-base);
+      font-weight: 500;
+      color: var(--accent-text);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .expr-cell {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: var(--text-muted);
+      max-width: 260px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* ── Pagination ── */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-4) var(--space-5);
+      border-top: 1px solid var(--border-subtle);
+      flex-wrap: wrap;
+      gap: var(--space-3);
+    }
+
+    .pagination-info {
+      font-size: var(--text-sm);
+      color: var(--text-muted);
+    }
+
+    .pagination-controls {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .page-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-default);
+      background: var(--bg-elevated);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: var(--text-sm);
+      font-family: var(--font-sans);
+      transition: all var(--transition-fast);
+    }
+
+    .page-btn:hover:not(:disabled) {
+      border-color: var(--accent-border);
+      color: var(--accent-text);
+    }
+
+    .page-btn.active {
+      background: var(--accent-dim);
+      border-color: var(--accent-border);
+      color: var(--accent-text);
+      font-weight: 600;
+    }
+
+    .page-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    /* ── Empty / loading states ── */
+    .history-empty {
+      padding: var(--space-16) var(--space-8);
+      text-align: center;
+      color: var(--text-muted);
+    }
+
+    .history-empty .empty-icon { font-size: 2.5rem; opacity: 0.2; margin-bottom: var(--space-4); }
+    .history-empty h3 { font-size: var(--text-lg); font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-2); }
+    .history-empty p  { font-size: var(--text-sm); }
+
+    /* Summary strip */
+    .summary-strip {
+      display: flex;
+      gap: var(--space-6);
+      margin-bottom: var(--space-5);
+      flex-wrap: wrap;
+    }
+
+    .summary-item {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .summary-label {
+      font-size: var(--text-xs);
+      font-weight: 600;
+      letter-spacing: var(--tracking-wider);
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .summary-value {
+      font-family: var(--font-mono);
+      font-size: var(--text-lg);
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    @media (max-width: 700px) {
+      .filter-bar { flex-direction: column; align-items: flex-start; }
+      .expr-cell  { max-width: 140px; }
+      .history-table th:nth-child(3),
+      .history-table td:nth-child(3) { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ══ SIDEBAR ══ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <a href="index.html" class="logo-mark" style="text-decoration:none">
+        <div class="logo-icon">G</div>
+        <span class="logo-text">GPA<span>Calc</span></span>
+      </a>
+    </div>
+    <nav class="sidebar-nav">
+      <span class="nav-section-label">Main</span>
+      <a href="dashboard.html" class="nav-link">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/>
+          <rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/>
+        </svg>
+        Dashboard
+      </a>
+      <a href="semesters.html" class="nav-link">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="1" y="3" width="14" height="11" rx="1.5"/>
+          <path d="M5 3V1.5M11 3V1.5M1 7h14"/>
+        </svg>
+        Semesters
+      </a>
+      <a href="converter.html" class="nav-link">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M2 5h12M10 2l4 3-4 3M14 11H2M6 8l-4 3 4 3"/>
+        </svg>
+        Converter
+      </a>
+      <span class="nav-section-label">Account</span>
+      <a href="history.html" class="nav-link active">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="8" cy="8" r="6.5"/><path d="M8 4.5V8l2.5 2"/>
+        </svg>
+        History
+      </a>
+      <a href="settings.html" class="nav-link">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="8" cy="8" r="2.5"/>
+          <path d="M8 1.5v1.8M8 12.7v1.8M1.5 8h1.8M12.7 8h1.8M3.4 3.4l1.3 1.3M11.3 11.3l1.3 1.3M3.4 12.6l1.3-1.3M11.3 4.7l1.3-1.3"/>
+        </svg>
+        Settings
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-pill">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <div class="user-info">
+          <div class="user-name" id="user-name">Loading…</div>
+          <div class="user-scale" id="user-scale"></div>
+        </div>
+      </div>
+      <a href="#" class="nav-link" data-action="logout" style="color:var(--text-muted)">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M6 14H2.5A1.5 1.5 0 011 12.5v-9A1.5 1.5 0 012.5 2H6M11 11l4-3-4-3M6 8h9"/>
+        </svg>
+        Sign out
+      </a>
+    </div>
+  </aside>
+
+  <button class="sidebar-toggle" id="sidebar-toggle">☰</button>
+
+  <!-- ══ MAIN ══ -->
+  <main class="main-content">
+    <div class="page-header">
+      <h1 class="page-title">History</h1>
+      <p class="page-subtitle">All your GPA calculations, conversions, and projections.</p>
+    </div>
+
+    <div class="page-body">
+
+      <!-- Summary strip -->
+      <div class="summary-strip" id="summary-strip">
+        <div class="summary-item">
+          <span class="summary-label">Total</span>
+          <span class="summary-value" id="summary-total">—</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Conversions</span>
+          <span class="summary-value" id="summary-convert">—</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">GPA Calcs</span>
+          <span class="summary-value" id="summary-gpa">—</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Projections</span>
+          <span class="summary-value" id="summary-target">—</span>
+        </div>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="filter-bar">
+        <div class="filter-chips">
+          <button class="filter-chip active" data-filter="all">All</button>
+          <button class="filter-chip" data-filter="convert">Conversions</button>
+          <button class="filter-chip" data-filter="semester_gpa">Semester GPA</button>
+          <button class="filter-chip" data-filter="cgpa">CGPA</button>
+          <button class="filter-chip" data-filter="target_grade">Projections</button>
+        </div>
+        <button class="btn btn-danger btn-sm" id="clear-all-btn">Clear all</button>
+      </div>
+
+      <!-- Table -->
+      <div class="history-card">
+        <div id="table-container">
+          <!-- skeleton -->
+          <div id="table-loading" style="padding: var(--space-8); display:flex; gap:var(--space-3); flex-direction:column">
+            <div class="skeleton" style="height:40px; border-radius:var(--radius-md)"></div>
+            <div class="skeleton" style="height:40px; border-radius:var(--radius-md)"></div>
+            <div class="skeleton" style="height:40px; border-radius:var(--radius-md)"></div>
+            <div class="skeleton" style="height:40px; border-radius:var(--radius-md)"></div>
+            <div class="skeleton" style="height:40px; border-radius:var(--radius-md)"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<div class="toast-container"></div>
+
+<script src="js/utils.js"></script>
+<script src="config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script>
+(() => {
+  'use strict';
+
+  const PAGE_SIZE = 20;
+
+  // Type metadata
+  const TYPE_META = {
+    convert:      { label: 'Convert',    cls: 'type-convert',  display: 'Conversion'  },
+    semester_gpa: { label: 'Sem GPA',    cls: 'type-gpa',      display: 'Semester GPA' },
+    cgpa:         { label: 'CGPA',       cls: 'type-cgpa',     display: 'CGPA'        },
+    target_grade: { label: 'Projection', cls: 'type-target',   display: 'Projection'  },
+    other:        { label: 'Calc',       cls: 'type-other',    display: 'Calculation' },
+  };
+
+  // State
+  let allItems    = [];
+  let filtered    = [];
+  let currentPage = 1;
+  let activeFilter = 'all';
+  let sortCol     = 'date';
+  let sortDir     = 'desc';
+
+  // Init
+  async function init() {
+    if (!Auth.requireAuth()) return;
+    Auth.init();
+
+    const user = await Auth.loadUser();
+    if (!user) return;
+    Auth.populateSidebar(user);
+
+    await loadHistory();
+    attachFilters();
+    attachClearAll();
+  }
+
+  // Load history
+  async function loadHistory() {
+    const { data, error } = await Api.history.list();
+    document.getElementById('table-loading').style.display = 'none';
+
+    if (error) {
+      renderEmpty('Could not load history. Please try again.');
+      return;
+    }
+
+    allItems = (data?.history ?? []);
+    buildSummary(allItems);
+    applyFilterAndRender();
+  }
+
+  // Summary strip
+  function buildSummary(items) {
+    const counts = { convert: 0, semester_gpa: 0, cgpa: 0, target_grade: 0 };
+    items.forEach(h => {
+      const t = detectType(h.expression);
+      if (counts[t] !== undefined) counts[t]++;
+    });
+
+    document.getElementById('summary-total').textContent   = items.length;
+    document.getElementById('summary-convert').textContent = counts.convert;
+    document.getElementById('summary-gpa').textContent     = counts.semester_gpa + counts.cgpa;
+    document.getElementById('summary-target').textContent  = counts.target_grade;
+  }
+
+  function detectType(expr) {
+    if (!expr) return 'cgpa';
+    if (expr.startsWith('convert'))      return 'convert';
+    if (expr.startsWith('semester_gpa')) return 'semester_gpa';
+    if (expr.startsWith('target'))       return 'target_grade';
+    if (expr.startsWith('cgpa'))         return 'cgpa';
+    return 'other';
+  }
+
+  // Filter + sort + paginate
+  function applyFilterAndRender() {
+    // Filter
+    filtered = activeFilter === 'all'
+      ? [...allItems]
+      : allItems.filter(h => detectType(h.expression) === activeFilter);
+
+    // Sort
+    filtered.sort((a, b) => {
+      let av, bv;
+      if (sortCol === 'date') {
+        av = new Date(a.created_at).getTime();
+        bv = new Date(b.created_at).getTime();
+      } else if (sortCol === 'result') {
+        av = parseFloat(a.result) || 0;
+        bv = parseFloat(b.result) || 0;
+      } else if (sortCol === 'type') {
+        av = detectType(a.expression);
+        bv = detectType(b.expression);
+      }
+      if (av < bv) return sortDir === 'asc' ? -1 :  1;
+      if (av > bv) return sortDir === 'asc' ?  1 : -1;
+      return 0;
+    });
+
+    currentPage = 1;
+    renderTable();
+  }
+
+  // Render table
+  function renderTable() {
+    const container = document.getElementById('table-container');
+
+    if (!filtered.length) {
+      renderEmpty(
+        activeFilter === 'all'
+          ? 'No calculations yet. Run a conversion or calculate a semester GPA to see history here.'
+          : `No ${TYPE_META[activeFilter]?.display ?? ''} calculations found.`
+      );
+      return;
+    }
+
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+    const start      = (currentPage - 1) * PAGE_SIZE;
+    const pageItems  = filtered.slice(start, start + PAGE_SIZE);
+
+    const sortArrow = (col) => {
+      if (sortCol !== col) return `<span class="sort-indicator">↕</span>`;
+      return `<span class="sort-indicator active">${sortDir === 'asc' ? '↑' : '↓'}</span>`;
+    };
+
+    const rows = pageItems.map(h => {
+      const type   = detectType(h.expression);
+      const meta   = TYPE_META[type] || TYPE_META.other;
+      const result = h.result !== null && h.result !== undefined
+        ? Number(h.result).toFixed(2) : '—';
+      const expr   = formatExpr(h.expression);
+      const date   = Utils.formatDateTime(h.created_at);
+      const cls    = h.classification ? Utils.classifyGPA(h.classification) : null;
+
+      return `
+        <tr>
+          <td><span class="type-badge ${meta.cls}">${meta.label}</span></td>
+          <td class="expr-cell" title="${h.expression || ''}">${expr}</td>
+          <td><span class="result-value">${result}</span></td>
+          <td>
+            ${cls
+              ? `<span class="classification-badge ${cls.cls}" style="font-size:10px;padding:2px 8px">${cls.short}</span>`
+              : '<span style="color:var(--text-muted)">—</span>'}
+          </td>
+          <td style="color:var(--text-muted); font-size:var(--text-xs); white-space:nowrap">${date}</td>
+        </tr>
+      `;
+    }).join('');
+
+    container.innerHTML = `
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th class="sortable" data-col="type">
+              Expression ${sortArrow('type')}
+            </th>
+            <th class="sortable" data-col="result">
+              Result ${sortArrow('result')}
+            </th>
+            <th>Class</th>
+            <th class="sortable" data-col="date">
+              When ${sortArrow('date')}
+            </th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+      ${totalPages > 1 ? paginationHTML(totalPages) : ''}
+    `;
+
+    // Attach sort handlers
+    container.querySelectorAll('th.sortable').forEach(th => {
+      th.addEventListener('click', () => {
+        const col = th.dataset.col;
+        if (sortCol === col) {
+          sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+          sortCol = col;
+          sortDir = col === 'date' ? 'desc' : 'asc';
+        }
+        applyFilterAndRender();
+      });
+    });
+
+    // Attach pagination handlers
+    container.querySelectorAll('.page-btn[data-page]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const p = parseInt(btn.dataset.page);
+        if (!isNaN(p)) {
+          currentPage = p;
+          renderTable();
+          document.querySelector('.history-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+  }
+
+  function formatExpr(expr) {
+    if (!expr) return '—';
+    // Strip the type prefix for cleaner display
+    return expr
+      .replace(/^convert:/, '')
+      .replace(/^semester_gpa:/, '')
+      .replace(/^cgpa:/, '')
+      .replace(/^target_grade:/, '')
+      || expr;
+  }
+
+  function paginationHTML(totalPages) {
+    const start = (currentPage - 1) * PAGE_SIZE + 1;
+    const end   = Math.min(currentPage * PAGE_SIZE, filtered.length);
+
+    // Build page number buttons — show window of 5 around current
+    const pages = [];
+    const delta = 2;
+    for (let i = 1; i <= totalPages; i++) {
+      if (
+        i === 1 || i === totalPages ||
+        (i >= currentPage - delta && i <= currentPage + delta)
+      ) {
+        pages.push(i);
+      } else if (pages[pages.length - 1] !== '…') {
+        pages.push('…');
+      }
+    }
+
+    const pageButtons = pages.map(p => {
+      if (p === '…') return `<span style="color:var(--text-muted);padding:0 4px">…</span>`;
+      return `<button class="page-btn ${p === currentPage ? 'active' : ''}" data-page="${p}">${p}</button>`;
+    }).join('');
+
+    return `
+      <div class="pagination">
+        <span class="pagination-info">Showing ${start}–${end} of ${filtered.length}</span>
+        <div class="pagination-controls">
+          <button class="page-btn" data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}>‹</button>
+          ${pageButtons}
+          <button class="page-btn" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>›</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderEmpty(message) {
+    document.getElementById('table-container').innerHTML = `
+      <div class="history-empty">
+        <div class="empty-icon">◷</div>
+        <h3>No history</h3>
+        <p>${message}</p>
+      </div>
+    `;
+  }
+
+  // Filter chips
+  function attachFilters() {
+    document.querySelectorAll('.filter-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        activeFilter = chip.dataset.filter;
+        applyFilterAndRender();
+      });
+    });
+  }
+
+  // Clear all
+  function attachClearAll() {
+    const btn = document.getElementById('clear-all-btn');
+
+    btn.addEventListener('click', async () => {
+      if (btn.dataset.confirm === 'true') {
+        Utils.setLoading(btn, true);
+        const { error } = await Api.history.clear();
+        Utils.setLoading(btn, false);
+
+        if (error) { Utils.toast(error, 'error'); return; }
+
+        allItems = [];
+        filtered = [];
+        buildSummary([]);
+        renderEmpty('History cleared.');
+        btn.dataset.confirm = '';
+        btn.textContent = 'Clear all';
+        Utils.toast('All history cleared.', 'success');
+      } else {
+        btn.dataset.confirm = 'true';
+        btn.textContent = 'Confirm clear?';
+        setTimeout(() => {
+          if (btn.dataset.confirm === 'true') {
+            btn.dataset.confirm = '';
+            btn.textContent = 'Clear all';
+          }
+        }, 3000);
+      }
+    });
+  }
+
+  init();
+
+})();
+</script>
+
+</body>
+</html>

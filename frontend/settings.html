@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings — GPACalc</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <style>
+
+    /* ── Settings layout ── */
+    .settings-layout {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: var(--space-8);
+      align-items: start;
+    }
+
+    /* Settings sub-nav */
+    .settings-nav {
+      position: sticky;
+      top: var(--space-8);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-1);
+    }
+
+    .settings-nav-link {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-3);
+      border-radius: var(--radius-md);
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      text-decoration: none;
+      border: none;
+      background: none;
+      font-family: var(--font-sans);
+      width: 100%;
+      text-align: left;
+    }
+
+    .settings-nav-link:hover { background: var(--bg-elevated); color: var(--text-primary); }
+    .settings-nav-link.active { background: var(--accent-dim); color: var(--accent-text); }
+
+    /* Settings sections */
+    .settings-sections {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-6);
+    }
+
+    .settings-section {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .settings-section.danger-section {
+      border-color: var(--error-border);
+    }
+
+    .section-head {
+      padding: var(--space-5) var(--space-6);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .section-head h2 {
+      font-size: var(--text-base);
+      font-weight: 600;
+      margin-bottom: var(--space-1);
+    }
+
+    .section-head p {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+    }
+
+    .danger-section .section-head {
+      background: var(--error-dim);
+      border-color: var(--error-border);
+    }
+
+    .danger-section .section-head h2 { color: var(--error); }
+
+    .section-body {
+      padding: var(--space-6);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-5);
+    }
+
+    /* Scale picker — same as register */
+    .scale-picker {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: var(--space-2);
+    }
+
+    .scale-pick-btn {
+      padding: var(--space-3) var(--space-2);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      text-align: center;
+      transition: all var(--transition-fast);
+      font-family: var(--font-sans);
+    }
+
+    .scale-pick-btn:hover { border-color: var(--border-strong); }
+
+    .scale-pick-btn.selected {
+      background: var(--accent-dim);
+      border-color: var(--accent-border);
+    }
+
+    .scale-pick-btn .spb-val {
+      font-family: var(--font-mono);
+      font-size: var(--text-base);
+      font-weight: 500;
+      color: var(--text-primary);
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .scale-pick-btn.selected .spb-val { color: var(--accent-text); }
+
+    .scale-pick-btn .spb-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      line-height: 1.3;
+    }
+
+    /* Scale change warning */
+    .scale-change-warning {
+      display: none;
+      padding: var(--space-3) var(--space-4);
+      background: var(--warning-dim);
+      border: 1px solid rgba(245,158,11,0.3);
+      border-radius: var(--radius-md);
+      font-size: var(--text-sm);
+      color: var(--warning);
+      line-height: var(--leading-snug);
+    }
+
+    .scale-change-warning.visible { display: block; }
+
+    /* Password strength meter */
+    .pw-strength { display: none; }
+    .pw-strength.visible { display: block; margin-top: var(--space-2); }
+
+    .strength-bars {
+      display: flex;
+      gap: 4px;
+      margin-bottom: var(--space-1);
+    }
+
+    .strength-bar {
+      flex: 1;
+      height: 3px;
+      background: var(--bg-overlay);
+      border-radius: var(--radius-full);
+      transition: background var(--transition-base);
+    }
+
+    .strength-bar.filled-weak   { background: var(--error); }
+    .strength-bar.filled-fair   { background: var(--warning); }
+    .strength-bar.filled-good   { background: var(--info); }
+    .strength-bar.filled-strong { background: var(--success); }
+
+    .strength-label { font-size: var(--text-xs); color: var(--text-muted); }
+
+    /* Password show/hide */
+    .pw-field-wrapper { position: relative; }
+    .pw-field-wrapper .input { padding-right: var(--space-10); }
+
+    .pw-toggle {
+      position: absolute;
+      right: var(--space-3);
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: var(--text-xs);
+      font-family: var(--font-sans);
+      padding: var(--space-1) var(--space-2);
+      border-radius: var(--radius-sm);
+      transition: color var(--transition-fast);
+    }
+
+    .pw-toggle:hover { color: var(--text-secondary); }
+
+    /* Section save row */
+    .section-save-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      padding-top: var(--space-2);
+    }
+
+    .save-confirmation {
+      font-size: var(--text-sm);
+      color: var(--success);
+      display: none;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .save-confirmation.visible { display: flex; }
+
+    /* Danger zone items */
+    .danger-item {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--space-6);
+      padding: var(--space-4) 0;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .danger-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .danger-item:first-child { padding-top: 0; }
+
+    .danger-item-text h4 {
+      font-size: var(--text-sm);
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--space-1);
+    }
+
+    .danger-item-text p {
+      font-size: var(--text-sm);
+      color: var(--text-muted);
+      max-width: 360px;
+    }
+
+    /* Delete account confirmation */
+    .delete-confirm-area {
+      display: none;
+      flex-direction: column;
+      gap: var(--space-3);
+      padding: var(--space-4);
+      background: var(--error-dim);
+      border: 1px solid var(--error-border);
+      border-radius: var(--radius-md);
+      margin-top: var(--space-4);
+    }
+
+    .delete-confirm-area.visible { display: flex; }
+
+    .delete-confirm-area p {
+      font-size: var(--text-sm);
+      color: var(--error);
+    }
+
+    .delete-confirm-area strong { color: var(--error); }
+
+    /* Profile avatar */
+    .profile-avatar-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-5);
+      padding-bottom: var(--space-5);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .settings-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: var(--radius-full);
+      background: var(--accent-dim);
+      border: 1px solid var(--accent-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--text-xl);
+      font-weight: 700;
+      color: var(--accent-text);
+      flex-shrink: 0;
+    }
+
+    .settings-avatar-info h3 {
+      font-size: var(--text-base);
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+
+    .settings-avatar-info p {
+      font-size: var(--text-sm);
+      color: var(--text-muted);
+    }
+
+    /* Readonly info row */
+    .info-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-3) 0;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .info-row:last-child { border-bottom: none; }
+
+    .info-row-label {
+      font-size: var(--text-sm);
+      color: var(--text-muted);
+    }
+
+    .info-row-value {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+    }
+
+    /* Responsive */
+    @media (max-width: 860px) {
+      .settings-layout { grid-template-columns: 1fr; }
+      .settings-nav { position: static; flex-direction: row; flex-wrap: wrap; }
+      .scale-picker { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    @media (max-width: 540px) {
+      .scale-picker { grid-template-columns: repeat(3, 1fr); }
+      .danger-item { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ══ SIDEBAR ══ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <a href="index.html" class="logo-mark" style="text-decoration:none">
+        <div class="logo-icon">G</div>
+        <span class="logo-text">GPA<span>Calc</span></span>
+      </a>
+    </div>
+    <nav class="sidebar-nav">
+      <span class="nav-section-label">Main</span>
+      <a href="dashboard.html" class="nav-link">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/>
+          <rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/>
+        </svg>
+        Dashboard
+      </a>
+      <a href="semesters.html" class="nav-link">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="1" y="3" width="14" height="11" rx="1.5"/>
+          <path d="M5 3V1.5M11 3V1.5M1 7h14"/>
+        </svg>
+        Semesters
+      </a>
+      <a href="converter.html" class="nav-link">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M2 5h12M10 2l4 3-4 3M14 11H2M6 8l-4 3 4 3"/>
+        </svg>
+        Converter
+      </a>
+      <span class="nav-section-label">Account</span>
+      <a href="history.html" class="nav-link">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="8" cy="8" r="6.5"/><path d="M8 4.5V8l2.5 2"/>
+        </svg>
+        History
+      </a>
+      <a href="settings.html" class="nav-link active">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="8" cy="8" r="2.5"/>
+          <path d="M8 1.5v1.8M8 12.7v1.8M1.5 8h1.8M12.7 8h1.8M3.4 3.4l1.3 1.3M11.3 11.3l1.3 1.3M3.4 12.6l1.3-1.3M11.3 4.7l1.3-1.3"/>
+        </svg>
+        Settings
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-pill">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <div class="user-info">
+          <div class="user-name" id="user-name">Loading…</div>
+          <div class="user-scale" id="user-scale"></div>
+        </div>
+      </div>
+      <a href="#" class="nav-link" data-action="logout" style="color:var(--text-muted)">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M6 14H2.5A1.5 1.5 0 011 12.5v-9A1.5 1.5 0 012.5 2H6M11 11l4-3-4-3M6 8h9"/>
+        </svg>
+        Sign out
+      </a>
+    </div>
+  </aside>
+
+  <button class="sidebar-toggle" id="sidebar-toggle">☰</button>
+
+  <!-- ══ MAIN ══ -->
+  <main class="main-content">
+    <div class="page-header">
+      <h1 class="page-title">Settings</h1>
+      <p class="page-subtitle">Manage your profile, password, and account preferences.</p>
+    </div>
+
+    <div class="page-body">
+      <div class="settings-layout">
+
+        <!-- Settings sub-nav -->
+        <nav class="settings-nav">
+          <a href="#profile"  class="settings-nav-link active" data-target="profile">Profile</a>
+          <a href="#password" class="settings-nav-link"        data-target="password">Password</a>
+          <a href="#danger"   class="settings-nav-link"        data-target="danger">Danger zone</a>
+        </nav>
+
+        <!-- Settings sections -->
+        <div class="settings-sections">
+
+          <!-- ══ PROFILE ══ -->
+          <div class="settings-section" id="section-profile">
+            <div class="section-head">
+              <h2>Profile</h2>
+              <p>Update your display name and grading scale preference.</p>
+            </div>
+            <div class="section-body">
+
+              <!-- Avatar + read-only info -->
+              <div class="profile-avatar-row">
+                <div class="settings-avatar" id="settings-avatar">?</div>
+                <div class="settings-avatar-info">
+                  <h3 id="settings-display-name">—</h3>
+                  <p id="settings-email">—</p>
+                </div>
+              </div>
+
+              <!-- Read-only info rows -->
+              <div>
+                <div class="info-row">
+                  <span class="info-row-label">Email</span>
+                  <span class="info-row-value" id="info-email">—</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-row-label">Member since</span>
+                  <span class="info-row-value" id="info-since">—</span>
+                </div>
+              </div>
+
+              <!-- Full name -->
+              <div class="form-group">
+                <label class="form-label" for="fullname-input">Your name</label>
+                <input
+                  type="text"
+                  id="fullname-input"
+                  class="input"
+                  placeholder="e.g. Abuad Emmanuel"
+                  maxlength="150"
+                  autocomplete="name"
+                />
+                <div class="form-hint">Used in your greeting. Optional.</div>
+              </div>
+
+              <!-- University name -->
+              <div class="form-group">
+                <label class="form-label" for="university-input">University name</label>
+                <input
+                  type="text"
+                  id="university-input"
+                  class="input"
+                  placeholder="e.g. University of Lagos"
+                  maxlength="100"
+                />
+                <div class="form-hint">Shown on your profile. Optional.</div>
+              </div>
+
+              <!-- Scale picker -->
+              <div class="form-group">
+                <label class="form-label">Grading scale</label>
+                <div class="scale-picker" id="profile-scale-picker">
+                  <button class="scale-pick-btn" data-scale="5.0">
+                    <span class="spb-val">5.0</span>
+                    <span class="spb-label">Nigeria · W. Africa</span>
+                  </button>
+                  <button class="scale-pick-btn" data-scale="4.0">
+                    <span class="spb-val">4.0</span>
+                    <span class="spb-label">US · Canada</span>
+                  </button>
+                  <button class="scale-pick-btn" data-scale="6.0_DE">
+                    <span class="spb-val">6.0</span>
+                    <span class="spb-label">Germany</span>
+                  </button>
+                  <button class="scale-pick-btn" data-scale="110">
+                    <span class="spb-val">110</span>
+                    <span class="spb-label">Italy (final)</span>
+                  </button>
+                  <button class="scale-pick-btn" data-scale="30">
+                    <span class="spb-val">30</span>
+                    <span class="spb-label">Italy (course)</span>
+                  </button>
+                </div>
+                <div class="scale-change-warning" id="scale-change-warning">
+                  ⚠ Changing your scale won't recalculate existing course grades.
+                  Only courses added <em>after</em> this change will use the new scale.
+                </div>
+              </div>
+
+              <!-- Error banner -->
+              <div class="inline-error" id="profile-error" style="display:none"></div>
+
+              <!-- Save row -->
+              <div class="section-save-row">
+                <button class="btn btn-primary" id="save-profile-btn">Save profile</button>
+                <div class="save-confirmation" id="profile-saved">
+                  <span>✓</span> Saved
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ══ PASSWORD ══ -->
+          <div class="settings-section" id="section-password">
+            <div class="section-head">
+              <h2>Password</h2>
+              <p>Choose a strong password you don't use elsewhere.</p>
+            </div>
+            <div class="section-body">
+
+              <div class="form-group">
+                <label class="form-label" for="current-password">Current password</label>
+                <div class="pw-field-wrapper">
+                  <input type="password" id="current-password" class="input" placeholder="••••••••" autocomplete="current-password" />
+                  <button class="pw-toggle" type="button" data-target="current-password">Show</button>
+                </div>
+                <div class="inline-error" id="current-password-error"></div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="new-password">New password</label>
+                <div class="pw-field-wrapper">
+                  <input type="password" id="new-password" class="input" placeholder="At least 8 characters" autocomplete="new-password" />
+                  <button class="pw-toggle" type="button" data-target="new-password">Show</button>
+                </div>
+                <div class="pw-strength" id="pw-strength">
+                  <div class="strength-bars">
+                    <div class="strength-bar" id="sb1"></div>
+                    <div class="strength-bar" id="sb2"></div>
+                    <div class="strength-bar" id="sb3"></div>
+                    <div class="strength-bar" id="sb4"></div>
+                  </div>
+                  <div class="strength-label" id="strength-label">Too short</div>
+                </div>
+                <div class="inline-error" id="new-password-error"></div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="confirm-password">Confirm new password</label>
+                <div class="pw-field-wrapper">
+                  <input type="password" id="confirm-password" class="input" placeholder="Repeat new password" autocomplete="new-password" />
+                  <button class="pw-toggle" type="button" data-target="confirm-password">Show</button>
+                </div>
+                <div class="inline-error" id="confirm-password-error"></div>
+              </div>
+
+              <!-- Error banner -->
+              <div class="inline-error" id="password-error" style="display:none"></div>
+
+              <!-- Save row -->
+              <div class="section-save-row">
+                <button class="btn btn-primary" id="save-password-btn">Update password</button>
+                <div class="save-confirmation" id="password-saved">
+                  <span>✓</span> Password updated
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ══ DANGER ZONE ══ -->
+          <div class="settings-section danger-section" id="section-danger">
+            <div class="section-head">
+              <h2>Danger zone</h2>
+              <p>These actions are permanent and cannot be undone.</p>
+            </div>
+            <div class="section-body" style="gap:0; padding: var(--space-5) var(--space-6)">
+
+              <!-- Clear history -->
+              <div class="danger-item">
+                <div class="danger-item-text">
+                  <h4>Clear calculation history</h4>
+                  <p>Permanently delete all your saved GPA and conversion calculations.</p>
+                </div>
+                <button class="btn btn-danger btn-sm" id="clear-history-btn" style="flex-shrink:0">
+                  Clear history
+                </button>
+              </div>
+
+              <!-- Delete account -->
+              <div class="danger-item">
+                <div class="danger-item-text">
+                  <h4>Delete account</h4>
+                  <p>Permanently delete your account, all semesters, courses, and calculation history. There is no recovery.</p>
+
+                  <!-- Confirm area -->
+                  <div class="delete-confirm-area" id="delete-confirm-area">
+                    <p>Type your email address to confirm deletion:</p>
+                    <input
+                      type="email"
+                      id="delete-email-confirm"
+                      class="input"
+                      placeholder="your@email.com"
+                    />
+                    <div style="display:flex; gap:var(--space-3)">
+                      <button class="btn btn-danger" id="confirm-delete-btn">Yes, delete my account</button>
+                      <button class="btn btn-ghost btn-sm" id="cancel-delete-btn">Cancel</button>
+                    </div>
+                  </div>
+                </div>
+                <button class="btn btn-danger btn-sm" id="delete-account-btn" style="flex-shrink:0">
+                  Delete account
+                </button>
+              </div>
+
+            </div>
+          </div>
+
+        </div><!-- /settings-sections -->
+      </div><!-- /settings-layout -->
+    </div><!-- /page-body -->
+  </main>
+</div>
+
+<div class="toast-container"></div>
+
+<script src="js/utils.js"></script>
+<script src="config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script>
+(() => {
+  'use strict';
+
+  // ── State ──
+  let user            = null;
+  let selectedScale   = null;
+  let originalScale   = null;
+
+  // ── Init ──
+  async function init() {
+    if (!Auth.requireAuth()) return;
+    Auth.init();
+
+    user = await Auth.loadUser();
+    if (!user) return;
+
+    Auth.populateSidebar(user);
+    populateProfile(user);
+    attachSubNav();
+    attachProfileHandlers();
+    attachPasswordHandlers();
+    attachDangerHandlers();
+
+    // Scroll to section if hash present
+    const hash = window.location.hash.replace('#', '');
+    if (hash) scrollToSection(hash);
+  }
+
+  // ── Populate profile form ──
+  function populateProfile(user) {
+    const initial = user.email.charAt(0).toUpperCase();
+
+    document.getElementById('settings-avatar').textContent      = initial;
+    document.getElementById('settings-display-name').textContent = user.full_name || user.university_name || user.email.split('@')[0];
+    document.getElementById('settings-email').textContent       = user.email;
+    document.getElementById('info-email').textContent           = user.email;
+    document.getElementById('info-since').textContent           = Utils.formatDate(user.created_at);
+    document.getElementById('fullname-input').value             = user.full_name || '';
+    document.getElementById('university-input').value           = user.university_name || '';
+
+    originalScale  = user.gpa_scale;
+    selectedScale  = user.gpa_scale;
+    setScalePicker(user.gpa_scale);
+  }
+
+  function setScalePicker(scale) {
+    document.querySelectorAll('#profile-scale-picker .scale-pick-btn').forEach(btn => {
+      btn.classList.toggle('selected', btn.dataset.scale === scale);
+    });
+  }
+
+  // ── Sub-nav smooth scroll ──
+  function attachSubNav() {
+    document.querySelectorAll('.settings-nav-link').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = link.dataset.target;
+        scrollToSection(target);
+        document.querySelectorAll('.settings-nav-link').forEach(l => l.classList.remove('active'));
+        link.classList.add('active');
+      });
+    });
+
+    // Highlight nav on scroll
+    const sections = ['profile', 'password', 'danger'];
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const id = entry.target.id.replace('section-', '');
+          document.querySelectorAll('.settings-nav-link').forEach(l => {
+            l.classList.toggle('active', l.dataset.target === id);
+          });
+        }
+      });
+    }, { threshold: 0.4 });
+
+    sections.forEach(id => {
+      const el = document.getElementById(`section-${id}`);
+      if (el) observer.observe(el);
+    });
+  }
+
+  function scrollToSection(name) {
+    const el = document.getElementById(`section-${name}`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // ── Profile handlers ──
+  function attachProfileHandlers() {
+    // Scale picker
+    document.getElementById('profile-scale-picker').addEventListener('click', (e) => {
+      const btn = e.target.closest('.scale-pick-btn');
+      if (!btn) return;
+      selectedScale = btn.dataset.scale;
+      setScalePicker(selectedScale);
+      document.getElementById('scale-change-warning').classList.toggle(
+        'visible',
+        selectedScale !== originalScale
+      );
+    });
+
+    // Save profile
+    document.getElementById('save-profile-btn').addEventListener('click', saveProfile);
+    document.getElementById('university-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') saveProfile();
+    });
+  }
+
+  async function saveProfile() {
+    const fullName    = document.getElementById('fullname-input').value.trim();
+    const university  = document.getElementById('university-input').value.trim();
+    const errorEl     = document.getElementById('profile-error');
+    const savedEl     = document.getElementById('profile-saved');
+    const btn         = document.getElementById('save-profile-btn');
+
+    errorEl.style.display = 'none';
+    savedEl.classList.remove('visible');
+
+    Utils.setLoading(btn, true);
+
+    const { data, error } = await Api.auth.updateProfile({
+      full_name:       fullName || null,
+      gpa_scale:       selectedScale,
+      university_name: university || null,
+    });
+
+    Utils.setLoading(btn, false);
+
+    if (error) {
+      errorEl.textContent    = error;
+      errorEl.style.display  = 'block';
+      return;
+    }
+
+    // Update local state
+    user           = data;
+    originalScale  = selectedScale;
+    Auth.populateSidebar(user);
+    document.getElementById('settings-display-name').textContent = user.full_name || user.university_name || user.email.split('@')[0];
+    document.getElementById('scale-change-warning').classList.remove('visible');
+
+    savedEl.classList.add('visible');
+    setTimeout(() => savedEl.classList.remove('visible'), 3000);
+    Utils.toast('Profile saved.', 'success');
+  }
+
+  // ── Password handlers ──
+  function attachPasswordHandlers() {
+    // Show/hide toggles
+    document.querySelectorAll('.pw-toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const input = document.getElementById(btn.dataset.target);
+        if (!input) return;
+        input.type = input.type === 'password' ? 'text' : 'password';
+        btn.textContent = input.type === 'password' ? 'Show' : 'Hide';
+      });
+    });
+
+    // Strength meter
+    document.getElementById('new-password').addEventListener('input', () => {
+      const val = document.getElementById('new-password').value;
+      const strengthEl = document.getElementById('pw-strength');
+      if (!val) { strengthEl.classList.remove('visible'); return; }
+      strengthEl.classList.add('visible');
+      renderStrength(getStrengthScore(val));
+    });
+
+    // Confirm match indicator
+    document.getElementById('confirm-password').addEventListener('input', () => {
+      const np  = document.getElementById('new-password').value;
+      const cp  = document.getElementById('confirm-password').value;
+      const err = document.getElementById('confirm-password-error');
+      if (cp && np !== cp) {
+        err.textContent = 'Passwords do not match.';
+        err.classList.add('visible');
+      } else {
+        err.classList.remove('visible');
+      }
+    });
+
+    // Save
+    document.getElementById('save-password-btn').addEventListener('click', savePassword);
+    document.getElementById('confirm-password').addEventListener('keydown', e => {
+      if (e.key === 'Enter') savePassword();
+    });
+  }
+
+  function getStrengthScore(pw) {
+    let score = 0;
+    if (pw.length >= 8)  score++;
+    if (pw.length >= 12) score++;
+    if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
+    if (/[0-9]/.test(pw) || /[^a-zA-Z0-9]/.test(pw)) score++;
+    return Math.min(score, 4);
+  }
+
+  const STRENGTH_LABELS  = ['Too short', 'Weak', 'Fair', 'Good', 'Strong'];
+  const STRENGTH_CLASSES = ['', 'filled-weak', 'filled-fair', 'filled-good', 'filled-strong'];
+  const STRENGTH_COLORS  = ['', 'var(--error)', 'var(--warning)', 'var(--info)', 'var(--success)'];
+
+  function renderStrength(score) {
+    ['sb1','sb2','sb3','sb4'].forEach((id, i) => {
+      const bar = document.getElementById(id);
+      bar.className = 'strength-bar';
+      if (i < score) bar.classList.add(STRENGTH_CLASSES[score]);
+    });
+    const lbl = document.getElementById('strength-label');
+    lbl.textContent = STRENGTH_LABELS[score];
+    lbl.style.color = STRENGTH_COLORS[score];
+  }
+
+  async function savePassword() {
+    const current  = document.getElementById('current-password').value;
+    const newPw    = document.getElementById('new-password').value;
+    const confirm  = document.getElementById('confirm-password').value;
+    const errorEl  = document.getElementById('password-error');
+    const savedEl  = document.getElementById('password-saved');
+    const btn      = document.getElementById('save-password-btn');
+
+    errorEl.style.display = 'none';
+    savedEl.classList.remove('visible');
+    Utils.clearError('current-password');
+    Utils.clearError('new-password');
+    Utils.clearError('confirm-password');
+
+    // Client-side validation
+    let valid = true;
+    if (!current) { Utils.showError('current-password', 'Enter your current password.'); valid = false; }
+    if (newPw.length < 8) { Utils.showError('new-password', 'New password must be at least 8 characters.'); valid = false; }
+    if (newPw !== confirm) { Utils.showError('confirm-password', 'Passwords do not match.'); valid = false; }
+    if (!valid) return;
+
+    Utils.setLoading(btn, true);
+
+    const { error } = await Api.auth.changePassword({
+      current_password: current,
+      new_password:     newPw,
+      confirm_password: confirm,
+    });
+
+    Utils.setLoading(btn, false);
+
+    if (error) {
+      if (error.toLowerCase().includes('current') || error.toLowerCase().includes('incorrect')) {
+        Utils.showError('current-password', 'Current password is incorrect.');
+      } else {
+        errorEl.textContent   = error;
+        errorEl.style.display = 'block';
+      }
+      return;
+    }
+
+    // Clear fields on success
+    document.getElementById('current-password').value = '';
+    document.getElementById('new-password').value     = '';
+    document.getElementById('confirm-password').value = '';
+    document.getElementById('pw-strength').classList.remove('visible');
+
+    savedEl.classList.add('visible');
+    setTimeout(() => savedEl.classList.remove('visible'), 3000);
+    Utils.toast('Password updated.', 'success');
+  }
+
+  // ── Danger zone handlers ──
+  function attachDangerHandlers() {
+    // Clear history
+    const clearBtn = document.getElementById('clear-history-btn');
+    clearBtn.addEventListener('click', async () => {
+      if (clearBtn.dataset.confirm === 'true') {
+        Utils.setLoading(clearBtn, true);
+        const { error } = await Api.history.clear();
+        Utils.setLoading(clearBtn, false);
+        if (error) { Utils.toast(error, 'error'); return; }
+        clearBtn.dataset.confirm = '';
+        clearBtn.textContent = 'Clear history';
+        Utils.toast('History cleared.', 'success');
+      } else {
+        clearBtn.dataset.confirm = 'true';
+        clearBtn.textContent = 'Confirm?';
+        setTimeout(() => {
+          if (clearBtn.dataset.confirm === 'true') {
+            clearBtn.dataset.confirm = '';
+            clearBtn.textContent = 'Clear history';
+          }
+        }, 3000);
+      }
+    });
+
+    // Delete account — show confirm area
+    document.getElementById('delete-account-btn').addEventListener('click', () => {
+      document.getElementById('delete-confirm-area').classList.add('visible');
+      document.getElementById('delete-account-btn').style.display = 'none';
+      document.getElementById('delete-email-confirm').focus();
+    });
+
+    // Cancel delete
+    document.getElementById('cancel-delete-btn').addEventListener('click', () => {
+      document.getElementById('delete-confirm-area').classList.remove('visible');
+      document.getElementById('delete-account-btn').style.display = '';
+      document.getElementById('delete-email-confirm').value = '';
+    });
+
+    // Confirm delete
+    document.getElementById('confirm-delete-btn').addEventListener('click', confirmDeleteAccount);
+    document.getElementById('delete-email-confirm').addEventListener('keydown', e => {
+      if (e.key === 'Enter') confirmDeleteAccount();
+    });
+  }
+
+  async function confirmDeleteAccount() {
+    const input = document.getElementById('delete-email-confirm').value.trim();
+    const btn   = document.getElementById('confirm-delete-btn');
+
+    if (!input) { Utils.toast('Type your email to confirm.', 'warning'); return; }
+
+    if (input.toLowerCase() !== user.email.toLowerCase()) {
+      Utils.toast('Email does not match. No changes made.', 'error');
+      document.getElementById('delete-email-confirm').classList.add('error');
+      setTimeout(() => document.getElementById('delete-email-confirm').classList.remove('error'), 2000);
+      return;
+    }
+
+    Utils.setLoading(btn, true);
+
+    const { error } = await Api.auth.deleteAccount();
+
+    if (error) {
+      Utils.setLoading(btn, false);
+      Utils.toast(error, 'error');
+      return;
+    }
+
+    // Clear token and redirect
+    Auth.logout();
+  }
+
+  init();
+
+})();
+</script>
+
+</body>
+</html>

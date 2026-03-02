@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GPA Converter — GPACalc</title>
+  <meta name="description" content="Convert your GPA between 4.0, 5.0, German 6-point, and Italian 110/30 scales instantly." />
+  <link rel="stylesheet" href="css/main.css" />
+  <style>
+    /* ── Converter-specific layout ── */
+
+    .converter-layout {
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: var(--space-6);
+      align-items: start;
+    }
+
+    /* Input panel */
+    .input-panel {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+
+    /* Scale selector cards — pick from-scale visually */
+    .scale-selector {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-2);
+      margin-bottom: var(--space-2);
+    }
+
+    .scale-option {
+      padding: var(--space-3) var(--space-2);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      text-align: center;
+      transition: all var(--transition-fast);
+      user-select: none;
+    }
+
+    .scale-option:hover {
+      border-color: var(--border-strong);
+      background: var(--bg-overlay);
+    }
+
+    .scale-option.selected {
+      background: var(--accent-dim);
+      border-color: var(--accent-border);
+    }
+
+    .scale-option .so-value {
+      font-family: var(--font-mono);
+      font-size: var(--text-md);
+      font-weight: 500;
+      color: var(--text-primary);
+      line-height: 1;
+      margin-bottom: var(--space-1);
+    }
+
+    .scale-option.selected .so-value { color: var(--accent-text); }
+
+    .scale-option .so-region {
+      font-size: var(--text-xs);
+      color: var(--text-muted);
+      line-height: 1.3;
+    }
+
+    /* GPA input — big, centred, mono */
+    .gpa-input-wrapper {
+      position: relative;
+    }
+
+    .gpa-input-wrapper .input-gpa {
+      font-family: var(--font-mono);
+      font-size: var(--text-3xl);
+      font-weight: 500;
+      height: 80px;
+      text-align: center;
+      color: var(--accent-text);
+      letter-spacing: var(--tracking-tight);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+
+    .gpa-input-wrapper .input-gpa:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+      outline: none;
+    }
+
+    .gpa-input-wrapper .input-gpa.error {
+      border-color: var(--error);
+      box-shadow: 0 0 0 3px var(--error-dim);
+      color: var(--error);
+    }
+
+    .gpa-max-hint {
+      position: absolute;
+      right: var(--space-4);
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: var(--text-xs);
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      pointer-events: none;
+    }
+
+    /* Target scale row */
+    .target-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-2);
+    }
+
+    .target-scale-btn {
+      padding: var(--space-3);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      text-align: center;
+      transition: all var(--transition-fast);
+      font-family: var(--font-sans);
+    }
+
+    .target-scale-btn:hover { border-color: var(--border-strong); }
+    .target-scale-btn.selected {
+      background: var(--bg-surface);
+      border-color: var(--accent);
+    }
+
+    .target-scale-btn .ts-val {
+      font-family: var(--font-mono);
+      font-size: var(--text-base);
+      font-weight: 500;
+      color: var(--text-primary);
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .target-scale-btn.selected .ts-val { color: var(--accent-text); }
+
+    .target-scale-btn .ts-label {
+      font-size: var(--text-xs);
+      color: var(--text-muted);
+    }
+
+    /* ── Right panel ── */
+    .right-panel {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-5);
+    }
+
+    /* Primary result */
+    .primary-result {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-xl);
+      padding: var(--space-8);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      min-height: 180px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .primary-result::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0;
+      transition: opacity var(--transition-base);
+    }
+
+    .primary-result.has-result::before { opacity: 1; }
+
+    .primary-result::after {
+      content: '';
+      position: absolute;
+      top: -60px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 300px;
+      height: 200px;
+      background: radial-gradient(ellipse, rgba(34,197,94,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .pr-empty {
+      color: var(--text-muted);
+      font-size: var(--text-sm);
+      transition: opacity var(--transition-base);
+    }
+
+    .pr-content {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .primary-result.has-result .pr-empty   { display: none; }
+    .primary-result.has-result .pr-content { display: flex; }
+
+    .pr-label {
+      font-size: var(--text-xs);
+      font-weight: 600;
+      letter-spacing: var(--tracking-wider);
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: var(--space-3);
+    }
+
+    .pr-number {
+      font-family: var(--font-mono);
+      font-size: clamp(2.8rem, 6vw, 4rem);
+      font-weight: 500;
+      color: var(--accent-text);
+      line-height: 1;
+      letter-spacing: var(--tracking-tight);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .pr-scale-label {
+      font-size: var(--text-sm);
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      margin-top: var(--space-2);
+    }
+
+    .pr-badge {
+      margin-top: var(--space-4);
+    }
+
+    @keyframes resultGlow {
+      0%   { text-shadow: none; }
+      40%  { text-shadow: 0 0 32px rgba(34,197,94,0.55); }
+      100% { text-shadow: 0 0 12px rgba(34,197,94,0.18); }
+    }
+
+    .pr-number.animating {
+      animation: resultGlow 0.9s ease-out forwards;
+    }
+
+    /* All-scales breakdown */
+    .breakdown-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .breakdown-header {
+      padding: var(--space-4) var(--space-5);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .breakdown-header h3 {
+      font-size: var(--text-sm);
+      font-weight: 600;
+    }
+
+    .breakdown-table { width: 100%; }
+
+    .bt-row {
+      display: grid;
+      grid-template-columns: 1fr 90px 1fr 90px;
+      padding: var(--space-3) var(--space-5);
+      border-bottom: 1px solid var(--border-subtle);
+      align-items: center;
+      transition: background var(--transition-fast);
+      gap: var(--space-3);
+    }
+
+    .bt-row:last-child { border-bottom: none; }
+    .bt-row:hover { background: var(--bg-elevated); }
+
+    .bt-row.bt-header {
+      background: var(--bg-overlay);
+      font-size: var(--text-xs);
+      font-weight: 600;
+      letter-spacing: var(--tracking-wider);
+      text-transform: uppercase;
+      color: var(--text-muted);
+      cursor: default;
+    }
+
+    .bt-row.bt-header:hover { background: var(--bg-overlay); }
+
+    .bt-row.bt-highlighted {
+      background: var(--accent-dim);
+    }
+
+    .bt-row.bt-highlighted:hover { background: var(--accent-dim); }
+
+    .bt-scale  { font-size: var(--text-sm); color: var(--text-secondary); }
+    .bt-value  {
+      font-family: var(--font-mono);
+      font-size: var(--text-base);
+      font-weight: 500;
+      color: var(--text-primary);
+      font-variant-numeric: tabular-nums;
+    }
+    .bt-value.highlighted { color: var(--accent-text); font-size: var(--text-md); }
+    .bt-region { font-size: var(--text-xs); color: var(--text-muted); }
+    .bt-class  { text-align: right; }
+
+    /* Progress bar for each scale (visual % of max) */
+    .bt-bar {
+      height: 4px;
+      background: var(--bg-overlay);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .bt-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: var(--radius-full);
+      transition: width 800ms cubic-bezier(0.4, 0, 0.2, 1);
+      opacity: 0.6;
+    }
+
+    .bt-row.bt-highlighted .bt-bar-fill { opacity: 1; }
+
+    /* History panel */
+    .history-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .history-header {
+      padding: var(--space-4) var(--space-5);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .history-header h3 { font-size: var(--text-sm); font-weight: 600; }
+
+    .history-empty {
+      padding: var(--space-8);
+      text-align: center;
+      color: var(--text-muted);
+      font-size: var(--text-sm);
+    }
+
+    .history-item {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: var(--space-4);
+      padding: var(--space-3) var(--space-5);
+      border-bottom: 1px solid var(--border-subtle);
+      align-items: center;
+      cursor: pointer;
+      transition: background var(--transition-fast);
+    }
+
+    .history-item:last-child { border-bottom: none; }
+
+    .history-item:hover { background: var(--bg-elevated); }
+
+    .hi-expr {
+      font-size: var(--text-xs);
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+    }
+
+    .hi-from {
+      font-size: var(--text-xs);
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .hi-result {
+      font-family: var(--font-mono);
+      font-size: var(--text-base);
+      font-weight: 500;
+      color: var(--accent-text);
+      white-space: nowrap;
+    }
+
+    .hi-time {
+      font-size: var(--text-xs);
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    /* ── Inline scale warning ── */
+    .scale-warning {
+      padding: var(--space-3) var(--space-4);
+      background: var(--warning-dim);
+      border: 1px solid rgba(245,158,11,0.3);
+      border-radius: var(--radius-md);
+      font-size: var(--text-xs);
+      color: var(--warning);
+      display: none;
+    }
+
+    .scale-warning.visible { display: block; }
+
+    /* ── Responsive ── */
+    @media (max-width: 1100px) {
+      .converter-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .scale-selector { grid-template-columns: repeat(3, 1fr); }
+      .target-row     { grid-template-columns: repeat(2, 1fr); }
+      .bt-row         { grid-template-columns: 1fr 70px; }
+      .bt-region, .bt-class { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════
+     APP SHELL
+════════════════════════════════════ -->
+<div class="app-shell">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <a href="index.html" class="logo-mark" style="text-decoration:none">
+        <div class="logo-icon">G</div>
+        <span class="logo-text">GPA<span>Calc</span></span>
+      </a>
+    </div>
+
+    <nav class="sidebar-nav">
+      <span class="nav-section-label">Main</span>
+      <a href="dashboard.html" class="nav-link">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/>
+          <rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/>
+        </svg>
+        Dashboard
+      </a>
+      <a href="semesters.html" class="nav-link">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="1" y="3" width="14" height="11" rx="1.5"/>
+          <path d="M5 3V1.5M11 3V1.5M1 7h14"/>
+        </svg>
+        Semesters
+      </a>
+      <a href="converter.html" class="nav-link active">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M2 5h12M10 2l4 3-4 3M14 11H2M6 8l-4 3 4 3"/>
+        </svg>
+        Converter
+      </a>
+
+      <span class="nav-section-label">Account</span>
+      <a href="history.html" class="nav-link">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="8" cy="8" r="6.5"/><path d="M8 4.5V8l2.5 2"/>
+        </svg>
+        History
+      </a>
+      <a href="settings.html" class="nav-link">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="8" cy="8" r="2.5"/>
+          <path d="M8 1.5v1.8M8 12.7v1.8M1.5 8h1.8M12.7 8h1.8M3.4 3.4l1.3 1.3M11.3 11.3l1.3 1.3M3.4 12.6l1.3-1.3M11.3 4.7l1.3-1.3"/>
+        </svg>
+        Settings
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-pill" id="user-pill">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <div class="user-info">
+          <div class="user-name" id="user-name">Loading…</div>
+          <div class="user-scale" id="user-scale"></div>
+        </div>
+      </div>
+      <a href="#" class="nav-link" data-action="logout" style="color:var(--text-muted)">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M6 14H2.5A1.5 1.5 0 011 12.5v-9A1.5 1.5 0 012.5 2H6M11 11l4-3-4-3M6 8h9"/>
+        </svg>
+        Sign out
+      </a>
+    </div>
+  </aside>
+
+  <!-- Mobile toggle -->
+  <button class="sidebar-toggle" id="sidebar-toggle">☰</button>
+
+  <!-- Main content -->
+  <main class="main-content">
+
+    <div class="page-header">
+      <h1 class="page-title">GPA Converter</h1>
+      <p class="page-subtitle">Convert between any two grading scales — results saved to your history.</p>
+    </div>
+
+    <div class="page-body">
+      <div class="converter-layout stagger-children">
+
+        <!-- ─── LEFT: Input panel ─── -->
+        <div class="input-panel">
+
+          <!-- From scale -->
+          <div class="card card-sm">
+            <div class="card-header" style="margin-bottom: var(--space-4);">
+              <div>
+                <div class="card-title">From scale</div>
+                <div class="card-subtitle">Select your current grading system</div>
+              </div>
+            </div>
+
+            <div class="scale-selector" id="from-scale-selector">
+              <div class="scale-option selected" data-scale="5.0">
+                <div class="so-value">5.0</div>
+                <div class="so-region">Nigeria · W. Africa</div>
+              </div>
+              <div class="scale-option" data-scale="4.0">
+                <div class="so-value">4.0</div>
+                <div class="so-region">US · Canada</div>
+              </div>
+              <div class="scale-option" data-scale="6.0_DE">
+                <div class="so-value">6.0</div>
+                <div class="so-region">Germany</div>
+              </div>
+              <div class="scale-option" data-scale="110">
+                <div class="so-value">110</div>
+                <div class="so-region">Italy (final)</div>
+              </div>
+              <div class="scale-option" data-scale="30">
+                <div class="so-value">30</div>
+                <div class="so-region">Italy (course)</div>
+              </div>
+            </div>
+
+            <!-- GPA input -->
+            <div class="gpa-input-wrapper" style="margin-top: var(--space-4);">
+              <input
+                type="number"
+                id="gpa-input"
+                class="input-gpa"
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+                autocomplete="off"
+              />
+              <span class="gpa-max-hint" id="gpa-max-hint">/ 5.0</span>
+            </div>
+            <div class="inline-error" id="gpa-error" style="margin-top:var(--space-2)"></div>
+
+            <div class="scale-warning" id="german-note" style="margin-top:var(--space-3)">
+              ⚠ On the German scale, <strong>1.0 is the best</strong> and 4.0 is the minimum pass.
+              Higher numbers = lower performance.
+            </div>
+          </div>
+
+          <!-- To scale -->
+          <div class="card card-sm">
+            <div class="card-header" style="margin-bottom: var(--space-4);">
+              <div>
+                <div class="card-title">To scale</div>
+                <div class="card-subtitle">Select your target grading system</div>
+              </div>
+            </div>
+            <div class="target-row" id="to-scale-selector">
+              <button class="target-scale-btn selected" data-scale="4.0">
+                <span class="ts-val">4.0</span>
+                <span class="ts-label">US · Canada</span>
+              </button>
+              <button class="target-scale-btn" data-scale="5.0">
+                <span class="ts-val">5.0</span>
+                <span class="ts-label">Nigeria · W. Africa</span>
+              </button>
+              <button class="target-scale-btn" data-scale="6.0_DE">
+                <span class="ts-val">6.0 DE</span>
+                <span class="ts-label">Germany</span>
+              </button>
+              <button class="target-scale-btn" data-scale="110">
+                <span class="ts-val">110</span>
+                <span class="ts-label">Italy (final)</span>
+              </button>
+              <button class="target-scale-btn" data-scale="30">
+                <span class="ts-val">30</span>
+                <span class="ts-label">Italy (course)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Convert button -->
+          <button class="btn btn-primary btn-lg btn-full" id="convert-btn">
+            Convert GPA
+          </button>
+
+        </div><!-- /input-panel -->
+
+        <!-- ─── RIGHT: Result panel ─── -->
+        <div class="right-panel">
+
+          <!-- Primary result -->
+          <div class="primary-result" id="primary-result">
+            <div class="pr-empty">Enter a GPA value and press Convert</div>
+            <div class="pr-content">
+              <div class="pr-label" id="pr-label">Converted GPA</div>
+              <div class="pr-number" id="pr-number">—</div>
+              <div class="pr-scale-label" id="pr-scale-label"></div>
+              <div class="pr-badge" id="pr-badge"></div>
+            </div>
+          </div>
+
+          <!-- All-scales breakdown -->
+          <div class="breakdown-card">
+            <div class="breakdown-header">
+              <h3>All scales</h3>
+              <span class="label" id="breakdown-from-label" style="color:var(--text-muted)">—</span>
+            </div>
+            <div id="breakdown-body">
+              <!-- populated by JS -->
+              <div style="padding: var(--space-6); text-align:center; color:var(--text-muted); font-size:var(--text-sm);">
+                Run a conversion to see the full breakdown
+              </div>
+            </div>
+          </div>
+
+          <!-- Conversion history -->
+          <div class="history-card">
+            <div class="history-header">
+              <h3>Recent conversions</h3>
+              <button class="btn btn-ghost btn-sm" id="clear-history-btn" style="display:none">Clear</button>
+            </div>
+            <div id="history-body">
+              <div class="history-empty">Your conversion history will appear here.</div>
+            </div>
+          </div>
+
+        </div><!-- /right-panel -->
+
+      </div><!-- /converter-layout -->
+    </div><!-- /page-body -->
+  </main>
+</div><!-- /app-shell -->
+
+
+<!-- ════════════════════════════════════
+     SCRIPTS
+════════════════════════════════════ -->
+<script src="js/utils.js"></script>
+<script src="config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script>
+(() => {
+  'use strict';
+
+  // ── Scale metadata ──
+  const SCALES = {
+    '4.0':    { label: '4.0 Scale',      region: 'US · Canada',         max: 4.0,   decimals: 2 },
+    '5.0':    { label: '5.0 Scale',      region: 'Nigeria · W. Africa', max: 5.0,   decimals: 2 },
+    '6.0_DE': { label: '6-Point (DE)',   region: 'Germany',             max: 6.0,   decimals: 2 },
+    '110':    { label: '110 Scale',       region: 'Italy (final)',       max: 110,   decimals: 0 },
+    '30':     { label: '30 Scale',        region: 'Italy (course)',      max: 30,    decimals: 0 },
+  };
+
+  // Classification map — server returns these strings
+  const CLASS_COLORS = {
+    first:  '#22c55e',
+    upper:  '#84cc16',
+    lower:  '#eab308',
+    third:  '#f97316',
+    fail:   '#ef4444',
+  };
+
+  // ── State ──
+  let fromScale   = '5.0';
+  let toScale     = '4.0';
+  let localHistory = [];  // { expr, fromScale, toScale, inputGPA, result, classification, ts }
+
+  // ── DOM refs ──
+  const gpaInput        = document.getElementById('gpa-input');
+  const gpaError        = document.getElementById('gpa-error');
+  const gpaMaxHint      = document.getElementById('gpa-max-hint');
+  const convertBtn      = document.getElementById('convert-btn');
+  const primaryResult   = document.getElementById('primary-result');
+  const prNumber        = document.getElementById('pr-number');
+  const prLabel         = document.getElementById('pr-label');
+  const prScaleLabel    = document.getElementById('pr-scale-label');
+  const prBadge         = document.getElementById('pr-badge');
+  const breakdownBody   = document.getElementById('breakdown-body');
+  const breakdownFrom   = document.getElementById('breakdown-from-label');
+  const historyBody     = document.getElementById('history-body');
+  const clearHistoryBtn = document.getElementById('clear-history-btn');
+  const germanNote      = document.getElementById('german-note');
+
+  // ── Init ──
+  async function init() {
+    // Route guard — must be logged in
+    if (!Auth.requireAuth()) return;
+
+    Auth.init();
+    Auth.populateSidebar();
+
+    attachScaleSelectors();
+    attachConvertHandler();
+    attachClearHistory();
+
+    // Load history from API
+    await loadHistory();
+
+    // Focus input
+    gpaInput.focus();
+  }
+
+  // ── Scale selectors ──
+  function attachScaleSelectors() {
+    // From scale
+    document.getElementById('from-scale-selector').addEventListener('click', (e) => {
+      const opt = e.target.closest('.scale-option');
+      if (!opt) return;
+
+      document.querySelectorAll('#from-scale-selector .scale-option').forEach(o => o.classList.remove('selected'));
+      opt.classList.add('selected');
+      fromScale = opt.dataset.scale;
+
+      // Update max hint
+      gpaMaxHint.textContent = '/ ' + SCALES[fromScale].max;
+
+      // Show German warning
+      germanNote.classList.toggle('visible', fromScale === '6.0_DE');
+
+      // Clear input + results if scale changes
+      gpaInput.value = '';
+      clearResult();
+    });
+
+    // To scale
+    document.getElementById('to-scale-selector').addEventListener('click', (e) => {
+      const btn = e.target.closest('.target-scale-btn');
+      if (!btn) return;
+
+      document.querySelectorAll('#to-scale-selector .target-scale-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      toScale = btn.dataset.scale;
+    });
+
+    // Enter key on input
+    gpaInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleConvert();
+    });
+
+    // Clear error on input
+    gpaInput.addEventListener('input', () => {
+      gpaError.classList.remove('visible');
+      gpaInput.classList.remove('error');
+    });
+  }
+
+  // ── Convert handler ──
+  function attachConvertHandler() {
+    convertBtn.addEventListener('click', handleConvert);
+  }
+
+  async function handleConvert() {
+    const raw = parseFloat(gpaInput.value);
+
+    // Validate
+    gpaError.classList.remove('visible');
+    gpaInput.classList.remove('error');
+
+    if (isNaN(raw) || raw < 0) {
+      gpaError.textContent = 'Enter a valid GPA value (e.g. 4.32).';
+      gpaError.classList.add('visible');
+      gpaInput.classList.add('error');
+      gpaInput.focus();
+      return;
+    }
+
+    const max = SCALES[fromScale].max;
+    if (raw > max) {
+      gpaError.textContent = `Maximum on ${SCALES[fromScale].label} is ${max}.`;
+      gpaError.classList.add('visible');
+      gpaInput.classList.add('error');
+      gpaInput.focus();
+      return;
+    }
+
+    if (fromScale === toScale) {
+      Utils.toast('From and To scale are the same.', 'warning');
+      return;
+    }
+
+    Utils.setLoading(convertBtn, true);
+
+    const { data, error } = await Api.calculations.convert({
+      gpa: raw,
+      from_scale: fromScale,
+      to_scale: toScale,
+    });
+
+    Utils.setLoading(convertBtn, false);
+
+    if (error) {
+      Utils.toast(error, 'error');
+      return;
+    }
+
+    renderResult(raw, data);
+    addToLocalHistory(raw, data);
+  }
+
+  // ── Render result ──
+  function renderResult(inputGPA, data) {
+    const converted       = data.converted ?? data.converted_gpa ?? 0;
+    const classification  = data.classification ?? null;
+    const allScales       = data.all_scales ?? [];
+
+    // Show panel
+    primaryResult.classList.add('has-result');
+
+    // Animate number
+    prNumber.classList.remove('animating');
+    void prNumber.offsetWidth; // force reflow
+    prNumber.classList.add('animating');
+
+    const targetScale = SCALES[toScale];
+    Utils.countUp(prNumber, converted, {
+      duration: 850,
+      decimals: targetScale.decimals,
+    });
+
+    prLabel.textContent     = 'Converted GPA';
+    prScaleLabel.textContent = targetScale.label + ' · ' + targetScale.region;
+
+    if (classification) {
+      prBadge.innerHTML = Utils.classificationBadge(classification);
+    } else {
+      prBadge.innerHTML = '';
+    }
+
+    // Breakdown table
+    renderBreakdown(inputGPA, allScales, classification);
+  }
+
+  function renderBreakdown(inputGPA, allScales, classification) {
+    breakdownFrom.textContent = inputGPA.toFixed(SCALES[fromScale].decimals) + ' on ' + SCALES[fromScale].label;
+
+    if (!allScales.length) {
+      // Build a minimal breakdown from what we know
+      allScales = Object.keys(SCALES).map(scale => ({
+        scale,
+        value: scale === fromScale ? inputGPA : null,
+        classification: scale === fromScale ? classification : null,
+      }));
+    }
+
+    const rows = allScales.map(row => {
+      const meta      = SCALES[row.scale] || {};
+      const isTarget  = row.scale === toScale;
+      const isSource  = row.scale === fromScale;
+      const val       = row.value;
+      const pct       = val !== null ? Math.min((val / meta.max) * 100, 100) : 0;
+      const cls       = row.classification ? Utils.classifyGPA(row.classification) : null;
+
+      // For German scale, invert the percentage display
+      const displayPct = row.scale === '6.0_DE'
+        ? Math.max(0, 100 - pct)
+        : pct;
+
+      return `
+        <div class="bt-row ${isTarget ? 'bt-highlighted' : ''}">
+          <div>
+            <div class="bt-scale">${meta.label || row.scale}</div>
+            <div class="bt-bar"><div class="bt-bar-fill" style="width:${val !== null ? displayPct : 0}%"></div></div>
+          </div>
+          <div class="bt-value ${isTarget ? 'highlighted' : ''}">
+            ${val !== null ? Number(val).toFixed(meta.decimals ?? 2) : '—'}
+          </div>
+          <div class="bt-region">${meta.region || ''}</div>
+          <div class="bt-class">
+            ${cls ? `<span class="classification-badge ${cls.cls}" style="font-size:10px;padding:2px 8px">${cls.short}</span>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    breakdownBody.innerHTML = `
+      <div class="bt-row bt-header">
+        <span>Scale</span><span>Value</span><span>Region</span><span style="text-align:right">Class</span>
+      </div>
+      ${rows}
+    `;
+  }
+
+  function clearResult() {
+    primaryResult.classList.remove('has-result');
+    breakdownBody.innerHTML = `<div style="padding:var(--space-6);text-align:center;color:var(--text-muted);font-size:var(--text-sm);">Run a conversion to see the full breakdown</div>`;
+    breakdownFrom.textContent = '—';
+  }
+
+  // ── History ──
+  async function loadHistory() {
+    const { data, error } = await Api.history.list();
+    if (error || !data) return;
+
+    // Filter to conversion-type calculations only
+    const conversionHistory = (data.calculations || data || [])
+      .filter(h => h.expression?.startsWith('convert'))
+      .slice(0, 15);
+
+    localHistory = conversionHistory.map(h => ({
+      expr:           h.expression,
+      result:         h.result,
+      classification: h.classification,
+      ts:             h.created_at,
+    }));
+
+    renderHistory();
+  }
+
+  function addToLocalHistory(inputGPA, data) {
+    const entry = {
+      expr:           `${inputGPA} · ${SCALES[fromScale].label} → ${SCALES[toScale].label}`,
+      inputGPA,
+      fromScale,
+      toScale,
+      result:         data.converted ?? data.converted_gpa,
+      classification: data.classification,
+      ts:             new Date().toISOString(),
+    };
+
+    localHistory.unshift(entry);
+    if (localHistory.length > 15) localHistory.pop();
+    renderHistory();
+  }
+
+  function renderHistory() {
+    if (!localHistory.length) {
+      historyBody.innerHTML = '<div class="history-empty">Your conversion history will appear here.</div>';
+      clearHistoryBtn.style.display = 'none';
+      return;
+    }
+
+    clearHistoryBtn.style.display = '';
+
+    historyBody.innerHTML = localHistory.map((h, i) => {
+      const result   = h.result !== null ? Number(h.result).toFixed(2) : '—';
+      const timeStr  = Utils.formatDateTime(h.ts);
+      const expr     = h.expr || '—';
+
+      return `
+        <div class="history-item" data-idx="${i}">
+          <div>
+            <div class="hi-expr">${expr}</div>
+          </div>
+          <div class="hi-result">${result}</div>
+          <div class="hi-time">${timeStr}</div>
+        </div>
+      `;
+    }).join('');
+
+    // Click to re-run a historical conversion
+    historyBody.querySelectorAll('.history-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const idx = parseInt(item.dataset.idx);
+        const h   = localHistory[idx];
+        if (!h || !h.fromScale) return;
+
+        // Set from/to scales
+        setFromScale(h.fromScale);
+        setToScale(h.toScale);
+        if (h.inputGPA !== undefined) {
+          gpaInput.value = h.inputGPA;
+          gpaMaxHint.textContent = '/ ' + SCALES[h.fromScale].max;
+        }
+      });
+    });
+  }
+
+  function setFromScale(scale) {
+    fromScale = scale;
+    document.querySelectorAll('#from-scale-selector .scale-option').forEach(o => {
+      o.classList.toggle('selected', o.dataset.scale === scale);
+    });
+    gpaMaxHint.textContent = '/ ' + SCALES[scale].max;
+    germanNote.classList.toggle('visible', scale === '6.0_DE');
+  }
+
+  function setToScale(scale) {
+    toScale = scale;
+    document.querySelectorAll('#to-scale-selector .target-scale-btn').forEach(b => {
+      b.classList.toggle('selected', b.dataset.scale === scale);
+    });
+  }
+
+  function attachClearHistory() {
+    clearHistoryBtn.addEventListener('click', async () => {
+      // Inline confirm — no modal
+      if (clearHistoryBtn.dataset.confirm === 'true') {
+        const { error } = await Api.history.clear();
+        if (error) { Utils.toast(error, 'error'); return; }
+        localHistory = [];
+        renderHistory();
+        clearHistoryBtn.dataset.confirm = '';
+        clearHistoryBtn.textContent = 'Clear';
+        Utils.toast('History cleared.', 'success');
+      } else {
+        clearHistoryBtn.dataset.confirm = 'true';
+        clearHistoryBtn.textContent = 'Confirm?';
+        setTimeout(() => {
+          clearHistoryBtn.dataset.confirm = '';
+          clearHistoryBtn.textContent = 'Clear';
+        }, 3000);
+      }
+    });
+  }
+
+  // ── Boot ──
+  init();
+
+})();
+</script>
+
+</body>
+</html>
