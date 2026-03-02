@@ -36,7 +36,7 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 
 _COOKIE_NAME    = "gpa_refresh"
 _COOKIE_MAX_AGE = REFRESH_TOKEN_DAYS * 24 * 60 * 60
-_IS_PROD        = os.getenv("ENVIRONMENT", "production") == "production"
+_IS_PROD        = os.getenv("ENVIRONMENT") == "production"
 
 
 def _set_refresh_cookie(response: Response, token: str) -> None:

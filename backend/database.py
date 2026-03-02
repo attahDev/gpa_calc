@@ -25,14 +25,14 @@ if IS_SQLITE:
         DATABASE_URL,
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
-        echo=os.getenv("ENVIRONMENT", "production") == "development",
+        echo=os.getenv("ENVIRONMENT") == "development",
     )
 else:
     # Postgres — NullPool, fresh connection per request
     engine = create_engine(
         DATABASE_URL,
         poolclass=NullPool,
-        echo=os.getenv("ENVIRONMENT", "production") == "development",
+        echo=os.getenv("ENVIRONMENT") == "development",
     )
 
 SessionLocal = sessionmaker(

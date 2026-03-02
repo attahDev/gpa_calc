@@ -31,7 +31,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-XSS-Protection"]        = "1; mode=block"
         response.headers["Referrer-Policy"]         = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"]      = "geolocation=(), microphone=(), camera=()"
-        if os.getenv("ENVIRONMENT", "production") == "production":
+        if os.getenv("ENVIRONMENT") == "production":
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         return response
 
@@ -46,7 +46,7 @@ async def lifespan(app: FastAPI):
 
 # ── App ───────────────────────────────────────────────────────────────────
 
-IS_PROD = os.getenv("ENVIRONMENT", "production") == "production"
+IS_PROD = os.getenv("ENVIRONMENT") == "production"
 
 app = FastAPI(
     title="GPA Calculator API",
@@ -68,16 +68,25 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SecurityHeadersMiddleware)
 
 # CORS — credentials=True required for httpOnly cookies
-ALLOWED_ORIGIN = os.getenv("ALLOWED_ORIGIN", "http://localhost:5500")
+# In production: ALLOWED_ORIGIN = https://your-app.onrender.com (set in Render dashboard)
+# In development: ALLOWED_ORIGIN = http://localhost:5500
+_ALLOWED_ORIGIN = os.getenv("ALLOWED_ORIGIN")
+_IS_DEV = os.getenv("ENVIRONMENT") == "development"
+
+# Dev allows localhost; production allows only the configured origin
+_CORS_ORIGINS = (
+    [
+        _ALLOWED_ORIGIN,
+        "http://localhost:5500",
+        "http://127.0.0.1:5500",
+    ]
+    if _IS_DEV
+    else [_ALLOWED_ORIGIN]   # production: only the real domain
+)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        ALLOWED_ORIGIN,
-        "http://localhost:5500",
-        "http://127.0.0.1:5500",
-        "http://localhost:8000",
-    ],
+    allow_origins=_CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization", "X-Session-ID"],

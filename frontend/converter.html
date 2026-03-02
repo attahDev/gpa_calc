@@ -716,7 +716,7 @@
   // ── Init ──
   async function init() {
     // Route guard — must be logged in
-    if (!Auth.requireAuth()) return;
+    if (!await Auth.requireAuth()) return;
 
     Auth.init();
     Auth.populateSidebar();
@@ -831,7 +831,7 @@
 
   // ── Render result ──
   function renderResult(inputGPA, data) {
-    const converted       = data.converted ?? data.converted_gpa ?? 0;
+    const converted       = data.converted_gpa ?? data.result ?? 0;
     const classification  = data.classification ?? null;
     const allScales       = data.all_scales ?? [];
 
@@ -944,7 +944,7 @@
       inputGPA,
       fromScale,
       toScale,
-      result:         data.converted ?? data.converted_gpa,
+      result:         data.converted_gpa ?? data.result,
       classification: data.classification,
       ts:             new Date().toISOString(),
     };

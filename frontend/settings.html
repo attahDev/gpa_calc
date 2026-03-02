@@ -649,7 +649,7 @@
 
   // ── Init ──
   async function init() {
-    if (!Auth.requireAuth()) return;
+    if (!await Auth.requireAuth()) return;
     Auth.init();
 
     user = await Auth.loadUser();

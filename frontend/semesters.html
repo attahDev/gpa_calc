@@ -620,7 +620,7 @@
 
   // ── Init ──
   async function init() {
-    if (!Auth.requireAuth()) return;
+    if (!await Auth.requireAuth()) return;
     Auth.init();
 
     user = await Auth.loadUser();
@@ -867,7 +867,6 @@
 
     sem.courses = data?.courses ?? data ?? [];
     renderCourses(semId);
-    if (sem.courses.length > 0) refreshSemesterGPA(semId);
   }
 
   function renderCourses(semId) {
@@ -1101,6 +1100,13 @@
   }
 
   // ── New semester modal ──
+  function openNewSemesterModal() {
+    const overlay   = document.getElementById('new-semester-overlay');
+    const nameInput = document.getElementById('sem-name-input');
+    Utils.openModal(overlay);
+    setTimeout(() => nameInput.focus(), 100);
+  }
+
   function attachNewSemesterModal() {
     const overlay  = document.getElementById('new-semester-overlay');
     const nameInput = document.getElementById('sem-name-input');

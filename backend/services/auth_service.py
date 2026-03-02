@@ -28,10 +28,10 @@ _JWT_SECRET    = os.getenv("JWT_SECRET", "")
 _JWT_ALGORITHM = "HS256"
 
 # Access token: short-lived (default 15 min)
-ACCESS_TOKEN_MINUTES = int(os.getenv("ACCESS_TOKEN_MINUTES", "15"))
+ACCESS_TOKEN_MINUTES = int(os.getenv("ACCESS_TOKEN_MINUTES"))
 
 # Refresh token: long-lived (default 7 days)
-REFRESH_TOKEN_DAYS = int(os.getenv("REFRESH_TOKEN_DAYS", "7"))
+REFRESH_TOKEN_DAYS = int(os.getenv("REFRESH_TOKEN_DAYS"))
 
 
 def _require_secret() -> str:

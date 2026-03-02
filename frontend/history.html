@@ -394,7 +394,7 @@
 
   // Init
   async function init() {
-    if (!Auth.requireAuth()) return;
+    if (!await Auth.requireAuth()) return;
     Auth.init();
 
     const user = await Auth.loadUser();
@@ -416,7 +416,7 @@
       return;
     }
 
-    allItems = (data?.history ?? []);
+    allItems = (data?.calculations ?? data ?? []);
     buildSummary(allItems);
     applyFilterAndRender();
   }
