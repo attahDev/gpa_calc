@@ -46,7 +46,7 @@ const Auth = (() => {
 
   // ── Route protection ───────────────────────────────────────────────────
 
-  async function requireAuth(redirectTo = 'auth.html') {
+  async function requireAuth(redirectTo = 'auth') {
     // Try silent refresh first — restores session after page reload
     if (!isLoggedIn()) {
       const ok = await Api.auth.refresh();
@@ -59,7 +59,7 @@ const Auth = (() => {
     return true;
   }
 
-  async function requireGuest(redirectTo = 'dashboard.html') {
+  async function requireGuest(redirectTo = 'dashboard') {
     // If we have a token, already logged in
     if (isLoggedIn()) {
       window.location.href = redirectTo;
@@ -109,7 +109,7 @@ const Auth = (() => {
     await Api.auth.logout().catch(() => {});   // clears the httpOnly cookie server-side
     Api.clearAccessToken();
     clearCachedUser();
-    window.location.href = 'index.html';
+    window.location.href = 'index';
   }
 
 
@@ -173,7 +173,7 @@ const Auth = (() => {
       sessionStorage.removeItem('login_redirect');
       window.location.href = next;
     } else {
-      window.location.href = 'dashboard.html';
+      window.location.href = 'dashboard';
     }
   }
 

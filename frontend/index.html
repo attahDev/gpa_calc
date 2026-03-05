@@ -530,7 +530,7 @@
     <div class="nav-public-inner">
 
       <!-- Logo -->
-      <a href="index.html" class="sidebar-logo" style="border:none; padding:0; text-decoration:none;">
+      <a href="index" class="sidebar-logo" style="border:none; padding:0; text-decoration:none;">
         <div class="logo-mark">
           <div class="logo-icon">G</div>
           <span class="logo-text">GPA<span>Calc</span></span>
@@ -539,14 +539,14 @@
 
       <!-- Nav links -->
       <div class="nav-public-links">
-        <a href="index.html"     class="nav-public-link active">Home</a>
-        <a href="converter.html" class="nav-public-link">Converter</a>
+        <a href="index"     class="nav-public-link active">Home</a>
+        <a href="converter" class="nav-public-link">Converter</a>
       </div>
 
       <!-- Auth actions -->
       <div class="nav-public-actions">
-        <a href="auth.html" class="btn btn-ghost btn-sm">Sign in</a>
-        <a href="auth.html?mode=register" class="btn btn-primary btn-sm">Get started</a>
+        <a href="auth" class="btn btn-ghost btn-sm">Sign in</a>
+        <a href="auth?mode=register" class="btn btn-primary btn-sm">Get started</a>
       </div>
 
     </div>
@@ -578,7 +578,7 @@
         <a href="#calculator" class="btn btn-primary btn-xl" id="try-free-btn">
           Try it free
         </a>
-        <a href="auth.html?mode=register" class="btn btn-secondary btn-lg">
+        <a href="auth?mode=register" class="btn btn-secondary btn-lg">
           Create account
         </a>
       </div>
@@ -780,8 +780,8 @@
               full conversion history, and GPA projections.
             </p>
             <div class="signup-nudge-actions">
-              <a href="auth.html?mode=register" class="btn btn-primary">Create free account</a>
-              <a href="auth.html" class="btn btn-secondary">Sign in</a>
+              <a href="auth?mode=register" class="btn btn-primary">Create free account</a>
+              <a href="auth" class="btn btn-secondary">Sign in</a>
             </div>
           </div>
 
@@ -869,9 +869,9 @@
     <div class="footer-inner">
       <span class="footer-copy">© <span id="footer-year"></span> GPACalc. Built for students.</span>
       <div class="footer-links">
-        <a href="converter.html">Converter</a>
-        <a href="auth.html">Sign in</a>
-        <a href="auth.html?mode=register">Register</a>
+        <a href="converter">Converter</a>
+        <a href="auth">Sign in</a>
+        <a href="auth?mode=register">Register</a>
       </div>
     </div>
   </footer>
@@ -934,7 +934,7 @@
       // If already logged in, redirect dashboard
       if (Auth.isLoggedIn()) {
         document.querySelector('.hero-actions').innerHTML = `
-          <a href="dashboard.html" class="btn btn-primary btn-xl">Go to dashboard</a>
+          <a href="dashboard" class="btn btn-primary btn-xl">Go to dashboard</a>
         `;
       }
     }
