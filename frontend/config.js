@@ -1,3 +1,3 @@
 window.APP_CONFIG = {
-  apiBase: 'http://localhost:8000'
+  apiBase: 'https://gpa-calc-0yt2.onrender.com'
 };
