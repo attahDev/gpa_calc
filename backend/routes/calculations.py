@@ -118,10 +118,10 @@ def get_cgpa(
         .order_by(Semester.created_at.asc())
         .all()
     )
+    scale_key = current_user.gpa_scale
+
     if not semesters_db:
         return GPAResponse(gpa=0.0, scale=scale_key, total_credit_hours=0, total_grade_points=0.0, course_count=0, classification="No data yet")
-
-    scale_key = current_user.gpa_scale
     semester_records = []
     for sem in semesters_db:
         courses_db = (

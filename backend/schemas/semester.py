@@ -2,6 +2,10 @@ from datetime import datetime
 from pydantic import BaseModel, field_validator
 
 
+# ---------------------------------------------------------------------------
+# Request schemas
+# ---------------------------------------------------------------------------
+
 class SemesterCreateRequest(BaseModel):
     name: str
 
@@ -16,6 +20,10 @@ class SemesterCreateRequest(BaseModel):
         return v
 
 
+# ---------------------------------------------------------------------------
+# Response schemas
+# ---------------------------------------------------------------------------
+
 class SemesterResponse(BaseModel):
     id: str
     user_id: str
@@ -23,6 +31,7 @@ class SemesterResponse(BaseModel):
     created_at: datetime
     course_count: int = 0
     credit_hours: int = 0
+    gpa: float | None = None
 
     model_config = {"from_attributes": True}
 

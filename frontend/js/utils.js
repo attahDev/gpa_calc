@@ -149,6 +149,11 @@ const Utils = (() => {
   };
 
   function toast(message, type = 'info', duration = 4000) {
+    // Ensure message is always a string
+    if (typeof message === 'object' && message !== null) {
+      message = message.message || message.detail || JSON.stringify(message);
+    }
+    message = String(message || 'An error occurred.');
     let container = document.querySelector('.toast-container');
     if (!container) {
       container = document.createElement('div');
