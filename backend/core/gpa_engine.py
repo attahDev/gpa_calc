@@ -35,11 +35,11 @@ def calculate_semester_gpa(courses: list[Course], scale: float) -> GPAResult:
     total_credits = 0
     
     for course in courses:
-        _validate_credit_hours(course.credit_hours)
+        ch = _validate_credit_hours(course.credit_hours)
         
         grade_point = grade_to_point(course.grade, scale)
-        total_points += course.credit_hours * grade_point
-        total_credits += course.credit_hours
+        total_points += ch * grade_point
+        total_credits += ch
     
     if total_credits == 0:
         raise ValueError(
@@ -133,11 +133,12 @@ def _resolve_semester(
         f"Semester at index {index} has neither courses nor pre-computed totals."
     )
     
-def _validate_credit_hours(credit_hours: int) -> None:
-    if not isinstance(credit_hours, int) or isinstance(credit_hours, bool):
-        raise ValueError(f"Credit_hours must be an integer, got {type}")
-    
+def _validate_credit_hours(credit_hours) -> int:
+    # DB stores as Float, cast to int
+    try:
+        credit_hours = int(credit_hours)
+    except (TypeError, ValueError):
+        raise ValueError(f"Credit_hours must be a number, got {type(credit_hours)}")
     if credit_hours < 1 or credit_hours > 10:
-        raise ValueError(
-            f"credit_hours must be between 1 and 10, got {credit_hours}."
-        )
+        raise ValueError(f"credit_hours must be between 1 and 10, got {credit_hours}.")
+    return credit_hours
