@@ -924,7 +924,8 @@
     if (error || !data) return;
 
     // Filter to conversion-type calculations only
-    const conversionHistory = (data.calculations || data || [])
+    const raw = data?.calculations ?? data ?? [];
+    const conversionHistory = (Array.isArray(raw) ? raw : [])
       .filter(h => h.expression?.startsWith('convert'))
       .slice(0, 15);
 

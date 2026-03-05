@@ -25,7 +25,7 @@ def get_history(
         .order_by(Calculation.created_at.desc())
         .all()
     )
-    return HistoryResponse(history=history, count=len(history))
+    return HistoryResponse(calculations=history, count=len(history))
 
 
 @router.delete("", response_model=OKResponse)

@@ -119,7 +119,7 @@ def get_cgpa(
         .all()
     )
     if not semesters_db:
-        raise invalid_input("No semesters found. Add semesters and courses first.")
+        return GPAResponse(gpa=0.0, scale=scale_key, total_credit_hours=0, total_grade_points=0.0, course_count=0, classification="No data yet")
 
     scale_key = current_user.gpa_scale
     semester_records = []
@@ -138,7 +138,7 @@ def get_cgpa(
         semester_records.append(SemesterRecord(courses=engine_courses))
 
     if not semester_records:
-        raise invalid_input("No courses found across your semesters. Add courses first.")
+        return GPAResponse(gpa=0.0, scale=scale_key, total_credit_hours=0, total_grade_points=0.0, course_count=0, classification="No courses yet")
 
     try:
         result = calculate_cgpa(semester_records, scale_key)

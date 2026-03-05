@@ -757,7 +757,7 @@
 
     // History
     if (!historyResult.error && historyResult.data) {
-      renderHistory(historyResult.data.calculations || historyResult.data || []);
+      renderHistory(historyResult.data?.calculations ?? historyResult.data ?? []);
     }
 
     // Semesters
@@ -907,6 +907,7 @@
 
   // ── History table ──
   function renderHistory(items) {
+    if (!Array.isArray(items)) items = [];
     const wrapper = document.getElementById('history-wrapper');
     const recent  = items.slice(0, 8);
 
