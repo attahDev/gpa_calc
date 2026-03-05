@@ -746,9 +746,15 @@
     if (!cgpaResult.error && cgpaResult.data) {
       cgpaData  = cgpaResult.data;
       viewScale = user.gpa_scale;
-      renderCGPAHero(cgpaData, viewScale);
+      const hasCourses = (cgpaData.course_count ?? cgpaData.total_credit_hours ?? 0) > 0;
+      if (hasCourses) {
+        renderCGPAHero(cgpaData, viewScale);
+        buildScaleToggle(user.gpa_scale);
+      } else {
+        document.getElementById('cgpa-empty').style.display    = 'block';
+        document.getElementById('cgpa-has-data').style.display = 'none';
+      }
       renderStatCards(cgpaData, semestersResult.data);
-      buildScaleToggle(user.gpa_scale);
     } else {
       document.getElementById('cgpa-empty').style.display    = 'block';
       document.getElementById('cgpa-has-data').style.display = 'none';

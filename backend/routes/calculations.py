@@ -68,7 +68,7 @@ def get_gpa(
         .all()
     )
     if not courses_db:
-        raise not_found("No courses found for this semester")
+        return GPAResponse(gpa=0.0, scale=current_user.gpa_scale, total_credit_hours=0, total_grade_points=0.0, course_count=0, classification="No courses yet")
 
     scale_key = current_user.gpa_scale
     engine_courses = [

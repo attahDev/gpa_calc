@@ -49,7 +49,7 @@ class GPAResponse(BaseModel):
     
 
 class TargetCourseInput(BaseModel):
-    name: str
+    name: str = "Course"
     credit_hours: int
     
     @field_validator("credit_hours")
