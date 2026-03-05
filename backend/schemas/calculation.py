@@ -136,4 +136,3 @@ class CalculationHistoryItem(BaseModel):
 class HistoryResponse(BaseModel):
     calculations: list[CalculationHistoryItem]
     count: int = 0
-    count: int

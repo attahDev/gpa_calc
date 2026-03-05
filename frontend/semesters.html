@@ -867,6 +867,7 @@
 
     sem.courses = data?.courses ?? data ?? [];
     renderCourses(semId);
+    if (sem.courses.length > 0) refreshSemesterGPA(semId);
   }
 
   function renderCourses(semId) {
