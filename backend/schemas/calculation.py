@@ -23,6 +23,12 @@ class ConvertRequest(BaseModel):
     
     
     
+class ScaleBreakdownItem(BaseModel):
+    scale: str
+    value: float
+    classification: str
+
+
 class ConvertResponse(BaseModel):
     gpa: float
     from_scale: str
@@ -30,6 +36,7 @@ class ConvertResponse(BaseModel):
     converted: float
     description: str
     classification: str
+    all_scales: list[ScaleBreakdownItem] = []
     
     
 class ConvertMultiResponse(BaseModel):
