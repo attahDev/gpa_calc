@@ -436,7 +436,7 @@ const Utils = (() => {
      ============================================================ */
 
   function markActiveNav() {
-    const current = window.location.pathname.split('/').pop() || 'index';
+    const current = window.location.pathname.split('/').pop() || 'index.html';
     document.querySelectorAll('.nav-link').forEach(link => {
       const href = link.getAttribute('href') || '';
       const isActive = href === current || href.endsWith(current);
