@@ -1,0 +1,6 @@
+/dashboard    /dashboard.html   200
+/semesters    /semesters.html   200
+/converter    /converter.html   200
+/history      /history.html     200
+/settings     /settings.html    200
+/auth         /auth.html        200
